@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de Evaluación de Ponencias</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+
+:root{
+  --navy: #1B3A5C;
+  --navy-deep: #10263D;
+  --violet: #7A3366;
+  --violet-soft: #F1E7EE;
+  --paper: #F7F5F1;
+  --ink: #23272B;
+  --ink-soft: #5B6470;
+  --line: #DDD6D0;
+  --green: #2F7D5A;
+  --green-soft: #E4F0E9;
+  --amber: #B9862E;
+  --amber-soft: #F6EDDC;
+  --rose: #A73B4C;
+  --rose-soft: #F5E4E6;
+  --radius: 10px;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Source Sans 3', sans-serif;
+  font-size:15px;
+  line-height:1.5;
+}
+.app{max-width:1180px;margin:0 auto;padding:28px 24px 80px;}
+
+/* HEADER */
+header.top{
+  background:linear-gradient(135deg, var(--navy-deep), var(--navy) 60%, var(--violet));
+  color:#fff;
+  border-radius:14px;
+  padding:28px 32px;
+  margin-bottom:22px;
+  position:relative;
+  overflow:hidden;
+}
+header.top::after{
+  content:"";
+  position:absolute; right:-40px; top:-60px;
+  width:220px;height:220px;border-radius:50%;
+  background:rgba(255,255,255,0.06);
+}
+.eyebrow{
+  text-transform:uppercase; letter-spacing:0.12em; font-size:11.5px;
+  color:#E8D9E1; font-weight:600; margin-bottom:6px;
+}
+h1{
+  font-family:'Fraunces', serif; font-weight:600; font-size:28px;
+  margin:0 0 6px; letter-spacing:-0.01em;
+}
+.sub{color:#D9E1E9; font-size:14px; max-width:620px;}
+
+/* TABS */
+.tabs{display:flex; gap:6px; margin-bottom:20px; border-bottom:1px solid var(--line);}
+.tab-btn{
+  background:none; border:none; padding:10px 18px; font-size:14.5px; font-weight:600;
+  color:var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent;
+  font-family:inherit;
+}
+.tab-btn.active{color:var(--navy); border-bottom-color:var(--violet);}
+.view{display:none;}
+.view.active{display:block;}
+
+/* LAYOUT */
+.grid{display:grid; grid-template-columns:1fr 320px; gap:22px; align-items:start;}
+@media (max-width:880px){.grid{grid-template-columns:1fr;}}
+
+.card{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px 22px; margin-bottom:16px;
+}
+.card h2{font-family:'Fraunces',serif; font-size:17px; font-weight:600; margin:0 0 14px; color:var(--navy-deep);}
+.field-row{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:12px;}
+.field-row.single{grid-template-columns:1fr;}
+label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; text-transform:uppercase; letter-spacing:.03em;}
+input[type=text], select, textarea{
+  width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:7px;
+  font-family:inherit; font-size:14.5px; color:var(--ink); background:#fff;
+}
+textarea{resize:vertical; min-height:56px;}
+input:focus, select:focus, textarea:focus{outline:2px solid var(--violet); outline-offset:1px;}
+
+/* CRITERIA */
+.criterion{border-top:1px solid var(--line); padding:16px 0;}
+.criterion:first-of-type{border-top:none; padding-top:2px;}
+.crit-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:4px;}
+.crit-title{font-weight:700; font-size:15px; color:var(--navy-deep);}
+.crit-weight{
+  font-size:11.5px; font-weight:700; color:var(--violet); background:var(--violet-soft);
+  padding:2px 8px; border-radius:20px; white-space:nowrap;
+}
+.crit-desc{font-size:13px; color:var(--ink-soft); margin:2px 0 10px; line-height:1.5;}
+.score-picker{display:flex; gap:7px; margin-bottom:8px;}
+.score-btn{
+  width:42px; height:38px; border-radius:8px; border:1px solid var(--line); background:#fff;
+  font-weight:700; font-size:15px; cursor:pointer; color:var(--ink-soft);
+  font-family:inherit; transition:all .12s ease;
+}
+.score-btn:hover{border-color:var(--violet);}
+.score-btn.sel{background:var(--navy); border-color:var(--navy); color:#fff;}
+
+/* SCORE PANEL */
+.panel{position:sticky; top:20px;}
+.panel .card{padding:20px;}
+.stack{display:flex; flex-direction:column; gap:5px; margin:12px 0 16px;}
+.stack-row{display:flex; align-items:center; gap:8px;}
+.stack-label{font-size:11.5px; color:var(--ink-soft); width:118px; flex-shrink:0;}
+.stack-track{flex:1; height:8px; background:#EFEAE4; border-radius:5px; overflow:hidden;}
+.stack-fill{height:100%; background:var(--violet); border-radius:5px; transition:width .25s ease;}
+.total-score{
+  text-align:center; padding:16px 10px; border-radius:10px; margin-top:6px;
+}
+.total-num{font-family:'Fraunces',serif; font-size:40px; font-weight:700; line-height:1;}
+.total-label{font-size:12px; text-transform:uppercase; letter-spacing:.08em; font-weight:700; margin-top:6px;}
+.badge{display:inline-block; padding:4px 12px; border-radius:20px; font-size:12.5px; font-weight:700; margin-top:8px;}
+.badge.aprobada{background:var(--green-soft); color:var(--green);}
+.badge.espera{background:var(--amber-soft); color:var(--amber);}
+.badge.no-aprobada{background:var(--rose-soft); color:var(--rose);}
+
+.btn-primary{
+  width:100%; background:var(--navy); color:#fff; border:none; padding:12px;
+  border-radius:8px; font-weight:700; font-size:14.5px; cursor:pointer; margin-top:6px;
+  font-family:inherit;
+}
+.btn-primary:hover{background:var(--navy-deep);}
+.btn-primary:disabled{background:#B9BFC6; cursor:not-allowed;}
+.hint{font-size:12px; color:var(--ink-soft); margin-top:8px; text-align:center;}
+.msg{font-size:13px; padding:9px 12px; border-radius:7px; margin-top:10px; display:none;}
+.msg.ok{display:block; background:var(--green-soft); color:var(--green);}
+.msg.err{display:block; background:var(--rose-soft); color:var(--rose);}
+
+/* INFORME */
+.toolbar{display:flex; gap:10px; align-items:end; margin-bottom:16px; flex-wrap:wrap;}
+.toolbar .field{min-width:220px;}
+.btn-secondary{
+  background:#fff; border:1px solid var(--navy); color:var(--navy); padding:9px 16px;
+  border-radius:7px; font-weight:700; font-size:13.5px; cursor:pointer; font-family:inherit;
+}
+.btn-secondary:hover{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+
+.ponencia-block{margin-bottom:22px;}
+.ponencia-block h3{font-family:'Fraunces',serif; font-size:17px; margin:0 0 2px; color:var(--navy-deep);}
+.ponencia-meta{font-size:12.5px; color:var(--ink-soft); margin-bottom:10px;}
+table{width:100%; border-collapse:collapse; font-size:13px; background:#fff; border-radius:var(--radius); overflow:hidden; border:1px solid var(--line);}
+th, td{padding:9px 10px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top;}
+th{background:#F2EEE8; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft); font-weight:700;}
+tr:last-child td{border-bottom:none;}
+.final-row td{font-weight:700; background:#FAF8F5;}
+.comment-cell{font-size:12.5px; color:var(--ink-soft); max-width:220px;}
+.empty{
+  text-align:center; padding:50px 20px; color:var(--ink-soft); font-size:14px;
+}
+.mini-badge{font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px;}
+
+/* GATE DE ACCESO */
+#gate-overlay{
+  position:fixed; inset:0; z-index:999;
+  background:linear-gradient(135deg, var(--navy-deep), var(--navy) 60%, var(--violet));
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.gate-card{
+  background:#fff; border-radius:14px; padding:32px 30px; max-width:360px; width:100%;
+  text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.25);
+}
+.gate-card h2{font-family:'Fraunces',serif; font-size:19px; margin:0 0 6px; color:var(--navy-deep);}
+.gate-card p{font-size:13px; color:var(--ink-soft); margin:0 0 18px;}
+.gate-card input{
+  width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:8px;
+  font-family:inherit; font-size:15px; text-align:center; letter-spacing:.04em;
+}
+.gate-card input:focus{outline:2px solid var(--violet); outline-offset:1px;}
+.gate-card button{
+  width:100%; margin-top:12px; background:var(--navy); color:#fff; border:none; padding:11px;
+  border-radius:8px; font-weight:700; font-size:14.5px; cursor:pointer; font-family:inherit;
+}
+.gate-card button:hover{background:var(--navy-deep);}
+.gate-error{color:var(--rose); font-size:12.5px; margin-top:10px; display:none;}
+#app-root{display:none;}
+</style>
+</head>
+<body>
+
+<div id="gate-overlay">
+  <div class="gate-card">
+    <h2>Acceso restringido</h2>
+    <p>Ingresa la clave compartida para el comité evaluador del 8° Encuentro Nacional.</p>
+    <input type="password" id="gate-password" placeholder="Clave de acceso" autocomplete="off">
+    <button id="gate-btn" type="button">Ingresar</button>
+    <div class="gate-error" id="gate-error">Clave incorrecta. Intenta de nuevo.</div>
+  </div>
+</div>
+
+<div id="app-root">
+<div class="app">
+
+  <header class="top">
+    <div class="eyebrow">Observatorio de Mujeres de Antioquia · 8° Encuentro Nacional de Observatorios de Género y DDHH</div>
+    <h1>Sistema de Evaluación de Ponencias</h1>
+    <div class="sub">Registra la calificación de cada ponencia según la rúbrica oficial. El puntaje final y la clasificación se calculan automáticamente.</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="evaluar">Evaluar ponencia</button>
+    <button class="tab-btn" data-tab="informe">Informe consolidado</button>
+  </div>
+
+  <!-- ===================== EVALUAR ===================== -->
+  <div class="view active" id="view-evaluar">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <h2>Identificación</h2>
+          <div class="field-row">
+            <div>
+              <label>Nombre del evaluador(a)</label>
+              <input type="text" id="ev-nombre" placeholder="Ej. Sandra Merchán">
+            </div>
+            <div>
+              <label>Equipo / entidad (opcional)</label>
+              <input type="text" id="ev-equipo" placeholder="Ej. Observatorio de Mujeres de Antioquia">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Ponencia</h2>
+          <div class="field-row">
+            <div>
+              <label>Título de la ponencia</label>
+              <input type="text" id="p-titulo" placeholder="Título tal como fue postulada">
+            </div>
+            <div>
+              <label>Código / Nº de postulación (opcional)</label>
+              <input type="text" id="p-codigo" placeholder="Ej. P-014">
+            </div>
+          </div>
+          <div class="field-row single">
+            <div>
+              <label>Eje temático / mesa (opcional)</label>
+              <input type="text" id="p-eje" placeholder="Ej. Cuidados y economía del cuidado">
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="criteria-card">
+          <h2>Rúbrica de evaluación</h2>
+          <div id="criteria-list"></div>
+        </div>
+
+        <div class="card">
+          <h2>Comentario general (opcional)</h2>
+          <textarea id="ev-comentario-general" placeholder="Observaciones generales sobre la ponencia..."></textarea>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="card">
+          <h2>Puntaje en vivo</h2>
+          <div class="stack" id="stack-container"></div>
+          <div class="total-score" id="total-box">
+            <div class="total-num" id="total-num">0.0</div>
+            <div class="total-label" style="color:var(--ink-soft)">Puntaje final (1–5)</div>
+            <div><span class="badge" id="total-badge"></span></div>
+          </div>
+          <button class="btn-primary" id="btn-guardar">Guardar evaluación</button>
+          <div class="msg" id="save-msg"></div>
+          <div class="hint">Se guarda de forma compartida para consolidar el informe del comité.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== INFORME ===================== -->
+  <div class="view" id="view-informe">
+    <div class="toolbar">
+      <div class="field">
+        <label>Filtrar por ponencia</label>
+        <select id="filtro-ponencia"><option value="">Todas las ponencias</option></select>
+      </div>
+      <button class="btn-secondary" id="btn-refrescar">Actualizar</button>
+      <button class="btn-secondary" id="btn-exportar">Exportar CSV</button>
+    </div>
+    <div id="informe-container"><div class="empty">Cargando evaluaciones…</div></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ---------- Clave de acceso compartida ----------
+// Cambia esta clave por la que quieras usar para el comité evaluador.
+const CLAVE_ACCESO = "GENERO2026";
+
+function intentarIngreso(){
+  const val = document.getElementById('gate-password').value.trim();
+  const err = document.getElementById('gate-error');
+  if(val.toUpperCase() === CLAVE_ACCESO.toUpperCase()){
+    document.getElementById('gate-overlay').style.display = 'none';
+    document.getElementById('app-root').style.display = 'block';
+  } else {
+    err.style.display = 'block';
+  }
+}
+document.getElementById('gate-btn').addEventListener('click', intentarIngreso);
+document.getElementById('gate-password').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') intentarIngreso();
+});
+document.getElementById('gate-password').focus();
+
+const CRITERIA = [
+  {id:"pertinencia", short:"Pertinencia temática", weight:0.20,
+   desc:"Relación con el eje del evento: se relaciona con los ejes del encuentro, aborda género/cuidados/DDHH, se ubica en una mesa temática y es coherente con el propósito del evento."},
+  {id:"claridad", short:"Claridad del problema y objetivos", weight:0.15,
+   desc:"El problema está claramente identificado, se entiende qué se quiere analizar o resolver, los objetivos son claros y hay coherencia entre problema y objetivos."},
+  {id:"rigor", short:"Rigor metodológico", weight:0.20,
+   desc:"Se explica cómo se desarrolló la investigación o experiencia, se mencionan fuentes/datos/narrativas/testimonios, y hay coherencia entre metodología y resultados."},
+  {id:"resultados", short:"Resultados / aportes", weight:0.15,
+   desc:"Presenta resultados o aprendizajes claros, bien explicados, que aportan información relevante y generan valor para el tema."},
+  {id:"coherencia", short:"Coherencia y redacción", weight:0.10,
+   desc:"Estructura clara (inicio, desarrollo, cierre), ideas organizadas, redacción comprensible, sin errores graves de escritura."},
+  {id:"genero", short:"Enfoque de género e interseccionalidad", weight:0.10,
+   desc:"Incorpora enfoque de género, reconoce desigualdades, considera diferencias entre poblaciones; no es una mención superficial."},
+  {id:"aplicabilidad", short:"Aplicabilidad / incidencia", weight:0.10,
+   desc:"Puede aportar a decisiones o acciones, tiene utilidad para políticas o programas, genera recomendaciones y es útil para observatorios u otras entidades."},
+];
+
+let currentScores = {};   // {critId: score}
+let currentComments = {}; // {critId: comment}
+
+function classify(score){
+  if(score >= 4.0) return {label:"Aprobada", cls:"aprobada"};
+  if(score >= 3.0) return {label:"Lista de espera", cls:"espera"};
+  return {label:"No aprobada", cls:"no-aprobada"};
+}
+
+// ---------- Build criteria form ----------
+function buildCriteriaForm(){
+  const list = document.getElementById('criteria-list');
+  list.innerHTML = '';
+  CRITERIA.forEach(c=>{
+    const div = document.createElement('div');
+    div.className = 'criterion';
+    div.innerHTML = `
+      <div class="crit-head">
+        <div class="crit-title">${c.short}</div>
+        <div class="crit-weight">${Math.round(c.weight*100)}%</div>
+      </div>
+      <div class="crit-desc">${c.desc}</div>
+      <div class="score-picker" data-crit="${c.id}">
+        ${[1,2,3,4,5].map(n=>`<button type="button" class="score-btn" data-val="${n}">${n}</button>`).join('')}
+      </div>
+      <textarea placeholder="Comentario sobre este criterio (opcional)" data-comment="${c.id}"></textarea>
+    `;
+    list.appendChild(div);
+  });
+
+  list.querySelectorAll('.score-picker').forEach(picker=>{
+    const critId = picker.dataset.crit;
+    picker.querySelectorAll('.score-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        picker.querySelectorAll('.score-btn').forEach(b=>b.classList.remove('sel'));
+        btn.classList.add('sel');
+        currentScores[critId] = parseInt(btn.dataset.val);
+        updateLiveScore();
+      });
+    });
+  });
+  list.querySelectorAll('textarea[data-comment]').forEach(ta=>{
+    ta.addEventListener('input', ()=>{ currentComments[ta.dataset.comment] = ta.value; });
+  });
+}
+
+function buildStackPanel(){
+  const container = document.getElementById('stack-container');
+  container.innerHTML = CRITERIA.map(c=>`
+    <div class="stack-row">
+      <div class="stack-label">${c.short}</div>
+      <div class="stack-track"><div class="stack-fill" id="fill-${c.id}" style="width:0%"></div></div>
+    </div>
+  `).join('');
+}
+
+function updateLiveScore(){
+  let total = 0;
+  CRITERIA.forEach(c=>{
+    const score = currentScores[c.id] || 0;
+    total += score * c.weight;
+    const fill = document.getElementById('fill-'+c.id);
+    if(fill) fill.style.width = (score/5*100)+'%';
+  });
+  document.getElementById('total-num').textContent = total.toFixed(2);
+  const info = classify(total);
+  const badge = document.getElementById('total-badge');
+  badge.textContent = info.label;
+  badge.className = 'badge '+info.cls;
+}
+
+function resetForm(){
+  currentScores = {};
+  currentComments = {};
+  document.getElementById('ev-nombre').value='';
+  document.getElementById('ev-equipo').value='';
+  document.getElementById('p-titulo').value='';
+  document.getElementById('p-codigo').value='';
+  document.getElementById('p-eje').value='';
+  document.getElementById('ev-comentario-general').value='';
+  buildCriteriaForm();
+  updateLiveScore();
+}
+
+// ---------- Save ----------
+function slug(str){
+  return (str||'').toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'sin-titulo';
+}
+
+document.getElementById('btn-guardar').addEventListener('click', async ()=>{
+  const nombre = document.getElementById('ev-nombre').value.trim();
+  const equipo = document.getElementById('ev-equipo').value.trim();
+  const titulo = document.getElementById('p-titulo').value.trim();
+  const codigo = document.getElementById('p-codigo').value.trim();
+  const eje = document.getElementById('p-eje').value.trim();
+  const comentarioGeneral = document.getElementById('ev-comentario-general').value.trim();
+  const msg = document.getElementById('save-msg');
+
+  if(!nombre){ showMsg('Por favor indica el nombre del evaluador(a).', 'err'); return; }
+  if(!titulo){ showMsg('Por favor indica el título de la ponencia.', 'err'); return; }
+  if(Object.keys(currentScores).length < CRITERIA.length){ showMsg('Faltan criterios por calificar.', 'err'); return; }
+
+  let total = 0;
+  const criteriosDetalle = {};
+  CRITERIA.forEach(c=>{
+    const score = currentScores[c.id];
+    total += score * c.weight;
+    criteriosDetalle[c.id] = {short:c.short, weight:c.weight, score, comment: currentComments[c.id]||''};
+  });
+
+  const ponenciaId = codigo ? slug(codigo) : slug(titulo);
+  const evaluadorId = slug(nombre);
+  const key = `evaluacion:${ponenciaId}:${evaluadorId}`;
+
+  const record = {
+    ponenciaId, ponenciaTitulo: titulo, ponenciaCodigo: codigo, ponenciaEje: eje,
+    evaluador: nombre, equipo, criterios: criteriosDetalle,
+    puntajeFinal: total, clasificacion: classify(total).label,
+    comentarioGeneral, timestamp: new Date().toISOString()
+  };
+
+  try{
+    const btn = document.getElementById('btn-guardar');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    await window.storage.set(key, JSON.stringify(record), true);
+    showMsg('Evaluación guardada correctamente.', 'ok');
+    resetForm();
+    btn.disabled = false; btn.textContent = 'Guardar evaluación';
+    loadInforme();
+  }catch(err){
+    console.error(err);
+    showMsg('Error al guardar. Intenta de nuevo.', 'err');
+    const btn = document.getElementById('btn-guardar');
+    btn.disabled = false; btn.textContent = 'Guardar evaluación';
+  }
+});
+
+function showMsg(text, type){
+  const msg = document.getElementById('save-msg');
+  msg.textContent = text;
+  msg.className = 'msg '+type;
+  setTimeout(()=>{ msg.className='msg'; }, 4000);
+}
+
+// ---------- Informe ----------
+let allRecords = [];
+
+async function loadInforme(){
+  const container = document.getElementById('informe-container');
+  try{
+    const listResult = await window.storage.list('evaluacion:', true);
+    const keys = (listResult && listResult.keys) ? listResult.keys : [];
+    if(keys.length === 0){
+      allRecords = [];
+      container.innerHTML = '<div class="empty">Aún no hay evaluaciones guardadas.</div>';
+      populateFiltro([]);
+      return;
+    }
+    const records = [];
+    for(const k of keys){
+      try{
+        const res = await window.storage.get(k, true);
+        if(res && res.value) records.push(JSON.parse(res.value));
+      }catch(e){ /* clave puede no existir, se ignora */ }
+    }
+    allRecords = records;
+    populateFiltro(records);
+    renderInforme(records);
+  }catch(err){
+    console.error(err);
+    container.innerHTML = '<div class="empty">No se pudo cargar el informe. Usa "Actualizar" para reintentar.</div>';
+  }
+}
+
+function populateFiltro(records){
+  const select = document.getElementById('filtro-ponencia');
+  const current = select.value;
+  const seen = new Map();
+  records.forEach(r=>{ seen.set(r.ponenciaId, r.ponenciaTitulo); });
+  select.innerHTML = '<option value="">Todas las ponencias</option>' +
+    Array.from(seen.entries()).map(([id,title])=>`<option value="${id}">${title}</option>`).join('');
+  select.value = current && seen.has(current) ? current : '';
+}
+
+function renderInforme(records){
+  const container = document.getElementById('informe-container');
+  const filtro = document.getElementById('filtro-ponencia').value;
+  const filtered = filtro ? records.filter(r=>r.ponenciaId===filtro) : records;
+
+  if(filtered.length === 0){
+    container.innerHTML = '<div class="empty">No hay evaluaciones para este filtro.</div>';
+    return;
+  }
+
+  // agrupar por ponencia
+  const grupos = {};
+  filtered.forEach(r=>{
+    if(!grupos[r.ponenciaId]) grupos[r.ponenciaId] = [];
+    grupos[r.ponenciaId].push(r);
+  });
+
+  let html = '';
+  Object.values(grupos).forEach(grupo=>{
+    const first = grupo[0];
+    const promedio = grupo.reduce((s,r)=>s+r.puntajeFinal,0) / grupo.length;
+    const promInfo = classify(promedio);
+
+    html += `<div class="ponencia-block">
+      <h3>${first.ponenciaTitulo}</h3>
+      <div class="ponencia-meta">${first.ponenciaCodigo ? 'Código: '+first.ponenciaCodigo+' · ' : ''}${first.ponenciaEje ? 'Eje: '+first.ponenciaEje+' · ' : ''}${grupo.length} evaluación(es)</div>
+      <table>
+        <thead><tr>
+          <th>Evaluador</th>
+          ${CRITERIA.map(c=>`<th>${c.short.split(' ')[0]}<br>(${Math.round(c.weight*100)}%)</th>`).join('')}
+          <th>Puntaje final</th>
+          <th>Clasificación</th>
+          <th>Comentarios</th>
+        </tr></thead>
+        <tbody>
+          ${grupo.map(r=>`
+            <tr>
+              <td><strong>${r.evaluador}</strong>${r.equipo ? '<br><span class="comment-cell">'+r.equipo+'</span>' : ''}</td>
+              ${CRITERIA.map(c=>`<td>${r.criterios[c.id] ? r.criterios[c.id].score : '—'}</td>`).join('')}
+              <td><strong>${r.puntajeFinal.toFixed(2)}</strong></td>
+              <td><span class="mini-badge ${classify(r.puntajeFinal).cls==='aprobada'?'aprobada':classify(r.puntajeFinal).cls==='espera'?'espera':'no-aprobada'}" style="background:${classify(r.puntajeFinal).cls==='aprobada'?'#E4F0E9':classify(r.puntajeFinal).cls==='espera'?'#F6EDDC':'#F5E4E6'};color:${classify(r.puntajeFinal).cls==='aprobada'?'#2F7D5A':classify(r.puntajeFinal).cls==='espera'?'#B9862E':'#A73B4C'}">${r.clasificacion}</span></td>
+              <td class="comment-cell">
+                ${CRITERIA.filter(c=>r.criterios[c.id] && r.criterios[c.id].comment).map(c=>`<div><em>${c.short}:</em> ${r.criterios[c.id].comment}</div>`).join('')}
+                ${r.comentarioGeneral ? '<div><em>General:</em> '+r.comentarioGeneral+'</div>' : ''}
+              </td>
+            </tr>
+          `).join('')}
+          <tr class="final-row">
+            <td>Promedio</td>
+            ${CRITERIA.map(c=>{
+              const avg = grupo.reduce((s,r)=> s + (r.criterios[c.id]?r.criterios[c.id].score:0), 0) / grupo.length;
+              return `<td>${avg.toFixed(1)}</td>`;
+            }).join('')}
+            <td>${promedio.toFixed(2)}</td>
+            <td><span class="mini-badge" style="background:${promInfo.cls==='aprobada'?'#E4F0E9':promInfo.cls==='espera'?'#F6EDDC':'#F5E4E6'};color:${promInfo.cls==='aprobada'?'#2F7D5A':promInfo.cls==='espera'?'#B9862E':'#A73B4C'}">${promInfo.label}</span></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+document.getElementById('filtro-ponencia').addEventListener('change', ()=>renderInforme(allRecords));
+document.getElementById('btn-refrescar').addEventListener('click', loadInforme);
+
+document.getElementById('btn-exportar').addEventListener('click', ()=>{
+  if(allRecords.length===0){ alert('No hay datos para exportar.'); return; }
+  const headers = ['Ponencia','Código','Eje','Evaluador','Equipo', ...CRITERIA.map(c=>c.short), 'Puntaje Final','Clasificación','Comentario General'];
+  const rows = allRecords.map(r=>[
+    r.ponenciaTitulo, r.ponenciaCodigo, r.ponenciaEje, r.evaluador, r.equipo,
+    ...CRITERIA.map(c=> r.criterios[c.id] ? r.criterios[c.id].score : ''),
+    r.puntajeFinal.toFixed(2), r.clasificacion,
+    (r.comentarioGeneral||'').replace(/[\r\n]+/g,' ')
+  ]);
+  const csv = [headers, ...rows].map(row =>
+    row.map(cell => `"${(cell===undefined||cell===null?'':cell).toString().replace(/"/g,'""')}"`).join(',')
+  ).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'informe_evaluacion_ponencias.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'informe') loadInforme();
+  });
+});
+
+// ---------- Init ----------
+buildCriteriaForm();
+buildStackPanel();
+updateLiveScore();
+</script>
+</body>
+</html>
