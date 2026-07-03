@@ -297,6 +297,33 @@ tr:last-child td{border-bottom:none;}
 </div>
 
 <script>
+// ---------- Backend: Google Apps Script + Google Sheets ----------
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytPAuGcoNVybIljlwZIg5I1w-L3pakYWurbq6WkZ69M5oPoKTF8c6e893zgIkJSuwJ/exec";
+
+const storage = {
+  async set(key, value){
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action: 'set', key, value })
+    });
+    if(!res.ok) throw new Error('Error de red al guardar');
+    return res.json();
+  },
+  async get(key){
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=get&key=${encodeURIComponent(key)}`);
+    if(!res.ok) throw new Error('Error de red al leer');
+    const data = await res.json();
+    if(!data) throw new Error('clave no encontrada');
+    return data;
+  },
+  async list(prefix){
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=list&prefix=${encodeURIComponent(prefix||'')}`);
+    if(!res.ok) throw new Error('Error de red al listar');
+    return res.json();
+  }
+};
+
 // ---------- Clave de acceso compartida ----------
 // Cambia esta clave por la que quieras usar para el comité evaluador.
 const CLAVE_ACCESO = "GENERO2026";
@@ -460,7 +487,7 @@ document.getElementById('btn-guardar').addEventListener('click', async ()=>{
   try{
     const btn = document.getElementById('btn-guardar');
     btn.disabled = true; btn.textContent = 'Guardando...';
-    await window.storage.set(key, JSON.stringify(record), true);
+    await storage.set(key, JSON.stringify(record));
     showMsg('Evaluación guardada correctamente.', 'ok');
     resetForm();
     btn.disabled = false; btn.textContent = 'Guardar evaluación';
@@ -486,7 +513,7 @@ let allRecords = [];
 async function loadInforme(){
   const container = document.getElementById('informe-container');
   try{
-    const listResult = await window.storage.list('evaluacion:', true);
+    const listResult = await storage.list('evaluacion:');
     const keys = (listResult && listResult.keys) ? listResult.keys : [];
     if(keys.length === 0){
       allRecords = [];
@@ -497,7 +524,7 @@ async function loadInforme(){
     const records = [];
     for(const k of keys){
       try{
-        const res = await window.storage.get(k, true);
+        const res = await storage.get(k);
         if(res && res.value) records.push(JSON.parse(res.value));
       }catch(e){ /* clave puede no existir, se ignora */ }
     }
